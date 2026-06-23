@@ -3,6 +3,25 @@ const app = express();
 
 const PORT = 8080;
 
+// logger middleware
+app.use((request, response, next)=>{
+    console.log(`${request.method} ${request.url}`);
+    next();
+})
+
+// simple auth middleware - query param "?auth=true" must be equal to "mysecrettoken"
+const authMiddleware = (request, response, next) => {
+  console.log("🔒 Auth middleware executing...");
+
+  const auth = request.query.auth;
+
+  if (auth !== "mysecrettoken") {
+    return response.status(401).send("Unauthorized ❌");
+  }
+
+  next();
+};
+
 // GET - api/v1/health - returns a simple message to indicate that the server is running
 app.get("/api/v1/health", (request, response) => {
   response.send("ALIVE AND WELL ✅ ");
@@ -23,6 +42,11 @@ app.get("/api/v1/weather", (request, response) => {
     temperature: "25°C",
     condition: `Its hot and sunny ${name} in ${city}`,
   });
+});
+
+// GET - api/v1/secret?auth=true - returns a simple message to indicate that the server is running
+app.get("/api/v1/secret", authMiddleware, (request, response) => {
+  response.send("This is a secret message 🔐");
 });
 
 app.listen(PORT, () => {
